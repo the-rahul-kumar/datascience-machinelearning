@@ -63,6 +63,26 @@ class Network:
 		self.out = self.sigmoid(z2)  # output second hidden layer
 
 
+	def ForwardPass_Simple(self, input ):  # Alternative implementation of ForwardPass(self, X )
+		layer = 0 # input to hidden layer
+		weightsum = 0
+		for y in range(0, self.Top[layer+1]):
+			for x in range(0, self.Top[layer]):
+
+				print(input)
+				weightsum  +=   input[x] * self.W1[x,y]
+
+			self.hid_out[y] = self.sigmoid(weightsum - self.B1[y])
+			weightsum = 0
+
+		layer = 1 #   hidden layer to output
+		weightsum = 0
+		for y in range(0, self.Top[layer+1]):
+			for x in range(0, self.Top[layer]):
+				weightsum  +=   self.hid_out[x] * self.W2[x,y]
+			self.out[y] = self.sigmoid(weightsum - self.B2[y])
+			weightsum = 0
+
 
 	def BackwardPass(self, Input, desired):   
 		out_delta =   (desired - self.out)*(self.out*(1-self.out))  
@@ -72,9 +92,44 @@ class Network:
 		self.B2+=  (-1 * self.lrate * out_delta)
 		self.W1 += (Input.T.dot(hid_delta) * self.lrate) 
 		self.B1+=  (-1 * self.lrate * hid_delta)
+
+	def BackwardPass_Simple(self, input, desired ):  # Alternative implementation of BackwardPass(self, Input, desired)
+
+		# compute gradients for each layer (output and hidden layer)
+
+		layer = 2 #output layer
+		for x in range(0, self.Top[layer]):
+			self.out_delta[x] =  (desired[x] - self.out[x])*(self.out[x]*(1-self.out[x]))
+
+		layer = 1 # hidden layer
+		temp = 0
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer+1]):
+				temp += ( self.out_delta[y] * self.W2[x,y]);
+				self.hid_delta[x] =  (self.hid_out[x] * (1 - self.hid_out[x])) * temp
+				temp = 0
+
+				# update weights and bias
+		layer = 1 # hidden to output
+
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer+1]):
+					self.W2[x,y] += self.learn_rate * self.out_delta[y] * self.hid_out[x]
+			#print self.W2
+			for y in range(0, self.Top[layer+1]):
+				self.B2[y] += -1 * self.learn_rate * self.out_delta[y]
+
+		layer = 0 # Input to Hidden
+
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer+1]):
+				self.W1[x,y] += self.learn_rate * self.hid_delta[y] * input[x]
+
+		for y in range(0, self.Top[layer+1]):
+			self.B1[y] += -1 * self.learn_rate * self.hid_delta[y]
+
 			
  
-
 	def TestNetwork(self, Data, testSize, erTolerance):
 		Input = np.zeros((1, self.Top[0])) # temp hold input
 		Desired = np.zeros((1, self.Top[2])) 
@@ -125,7 +180,7 @@ class Network:
 				Input[:]  =  self.TrainData[s,0:self.Top[0]]  
 				Desired[:] = self.TrainData[s,self.Top[0]:]  
 
-				self.ForwardPass(Input )  
+				self.ForwardPass_Simple(Input)  
 				self.BackwardPass(Input , Desired)
 				sse = sse+ self.sampleEr(Desired)
 			 
@@ -190,7 +245,7 @@ def main():
 		TestData = np.loadtxt("data/xor.csv", delimiter=',') #  
 		Hidden = 3
 		Input = 2
-		Output = 2  # can implement softmax
+		Output = 2  # one hot encoding: https://machinelearningmastery.com/how-to-one-hot-encode-sequence-data-in-python/
 		TrSamples =  4
 		TestSize = 4
 		learnRate = 0.9 
@@ -199,7 +254,7 @@ def main():
 
 	#print(TrainData)
 
-    # todo: softmax: https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
+	# todo: softmax: https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
 
 
 	Topo = [Input, Hidden, Output] 
