@@ -20,35 +20,47 @@ import time
  
 class Network:
 
-	def __init__(self, Topo, Train, Test, MaxTime, Samples, MinPer): 
+	def __init__(self, Topo, Train, Test, MaxTime, Samples, MinPer, learnRate): 
 		self.Top  = Topo  # NN topology [input, hidden, output]
 		self.Max = MaxTime # max epocs
 		self.TrainData = Train
 		self.TestData = Test
 		self.NumSamples = Samples
 
-		self.lrate  = 0 # will be updated later with BP call
-
-		self.momenRate = 0
-		self.useNesterovMomen = 0 #use nestmomentum 1, not use is 0
+		self.learn_rate  = learnRate
+ 
 
 		self.minPerf = MinPer
-																		#initialize weights ( W1 W2 ) and bias ( b1 b2 ) of the network
+		
+		#initialize weights ( W1 W2 ) and bias ( b1 b2 ) of the network
 		np.random.seed() 
-		self.W1 = np.random.randn(self.Top[0]  , self.Top[1])  / np.sqrt(self.Top[0] ) 
-		self.B1 = np.random.randn(1  , self.Top[1])  / np.sqrt(self.Top[1] ) # bias first layer
+		self.W1 = np.random.uniform(-0.5, 0.5, (self.Top[0] , self.Top[1]))  
+		#print(self.W1,  ' self.W1')
+		self.B1 = np.random.uniform(-0.5,0.5, (1, self.Top[1])  ) # bias first layer
+		#print(self.B1, ' self.B1')
 		self.BestB1 = self.B1
 		self.BestW1 = self.W1 
-		self.W2 = np.random.randn(self.Top[1] , self.Top[2]) / np.sqrt(self.Top[1] )
-		self.B2 = np.random.randn(1  , self.Top[2])  / np.sqrt(self.Top[1] ) # bias second layer
+		self.W2 = np.random.uniform(-0.5, 0.5, (self.Top[1] , self.Top[2]))   
+		self.B2 = np.random.uniform(-0.5,0.5, (1,self.Top[2]))  # bias second layer
 		self.BestB2 = self.B2
 		self.BestW2 = self.W2 
-		self.hidout = np.zeros((1, self.Top[1] )) # output of first hidden layer
-		self.out = np.zeros((1, self.Top[2])) #  output last layer
+		self.hidout = np.zeros(self.Top[1] ) # output of first hidden layer
+		self.out = np.zeros(self.Top[2]) #  output last layer
+
+		self.hid_delta = np.zeros(self.Top[1] ) # output of first hidden layer
+		self.out_delta = np.zeros(self.Top[2]) #  output last layer
+
+
 
 
 	def sigmoid(self,x):
 		return 1 / (1 + np.exp(-x))
+
+	
+	def softmax(self, x):
+		# Numerically stable with large exponentials
+		exps = np.exp(x - x.max())
+		return exps / np.sum(exps, axis=0)
 
 	def sampleEr(self,actualout):
 		error = np.subtract(self.out, actualout)
@@ -62,71 +74,19 @@ class Network:
 		z2 = self.hidout.dot(self.W2)  - self.B2 
 		self.out = self.sigmoid(z2)  # output second hidden layer
 
-
-	def ForwardPass_Simple(self, input ):  # Alternative implementation of ForwardPass(self, X )
-		layer = 0 # input to hidden layer
-		weightsum = 0
-		for y in range(0, self.Top[layer+1]):
-			for x in range(0, self.Top[layer]):
-
-				print(input)
-				weightsum  +=   input[x] * self.W1[x,y]
-
-			self.hid_out[y] = self.sigmoid(weightsum - self.B1[y])
-			weightsum = 0
-
-		layer = 1 #   hidden layer to output
-		weightsum = 0
-		for y in range(0, self.Top[layer+1]):
-			for x in range(0, self.Top[layer]):
-				weightsum  +=   self.hid_out[x] * self.W2[x,y]
-			self.out[y] = self.sigmoid(weightsum - self.B2[y])
-			weightsum = 0
+ 
 
 
-	def BackwardPass(self, Input, desired):   
+
+	def BackwardPass(self, input_vec, desired):   
 		out_delta =   (desired - self.out)*(self.out*(1-self.out))  
-		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1-self.hidout))
-		 
-		self.W2+= (self.hidout.T.dot(out_delta) * self.lrate)  
-		self.B2+=  (-1 * self.lrate * out_delta)
-		self.W1 += (Input.T.dot(hid_delta) * self.lrate) 
-		self.B1+=  (-1 * self.lrate * hid_delta)
+		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1-self.hidout)) #https://www.tutorialspoint.com/numpy/numpy_dot.htm  https://www.geeksforgeeks.org/numpy-dot-python/
+  
+		self.W2+= self.hidout.T.dot(out_delta) * self.learn_rate
+		self.B2+=  (-1 * self.learn_rate * out_delta)
 
-	def BackwardPass_Simple(self, input, desired ):  # Alternative implementation of BackwardPass(self, Input, desired)
-
-		# compute gradients for each layer (output and hidden layer)
-
-		layer = 2 #output layer
-		for x in range(0, self.Top[layer]):
-			self.out_delta[x] =  (desired[x] - self.out[x])*(self.out[x]*(1-self.out[x]))
-
-		layer = 1 # hidden layer
-		temp = 0
-		for x in range(0, self.Top[layer]):
-			for y in range(0, self.Top[layer+1]):
-				temp += ( self.out_delta[y] * self.W2[x,y]);
-				self.hid_delta[x] =  (self.hid_out[x] * (1 - self.hid_out[x])) * temp
-				temp = 0
-
-				# update weights and bias
-		layer = 1 # hidden to output
-
-		for x in range(0, self.Top[layer]):
-			for y in range(0, self.Top[layer+1]):
-					self.W2[x,y] += self.learn_rate * self.out_delta[y] * self.hid_out[x]
-			#print self.W2
-			for y in range(0, self.Top[layer+1]):
-				self.B2[y] += -1 * self.learn_rate * self.out_delta[y]
-
-		layer = 0 # Input to Hidden
-
-		for x in range(0, self.Top[layer]):
-			for y in range(0, self.Top[layer+1]):
-				self.W1[x,y] += self.learn_rate * self.hid_delta[y] * input[x]
-
-		for y in range(0, self.Top[layer+1]):
-			self.B1[y] += -1 * self.learn_rate * self.hid_delta[y]
+		self.W1 += (input_vec.T.dot(hid_delta) * self.learn_rate) 
+		self.B1+=  (-1 * self.learn_rate * hid_delta) 
 
 			
  
@@ -163,25 +123,26 @@ class Network:
 		self.BestB1 = self.B1
 		self.BestB2 = self.B2  
 
-	def BP_GD(self, learnRate):  
+	def BP_GD(self):  
 
-		self.lrate = learnRate 
- 
+
 		Input = np.zeros((1, self.Top[0])) # temp hold input
 		Desired = np.zeros((1, self.Top[2])) 
-		Er = []#np.zeros((1, self.Max)) 
+ 
+  
+		Er = [] 
 		epoch = 0
-		bestmse = 100
+		bestmse = 10000 # assign a large number in begining to maintain best (lowest RMSE)
 		bestTrain = 0
 		while  epoch < self.Max and bestTrain < self.minPerf :
 			sse = 0
 			for s in range(0, self.NumSamples):
 		
 				Input[:]  =  self.TrainData[s,0:self.Top[0]]  
-				Desired[:] = self.TrainData[s,self.Top[0]:]  
+				Desired[:]  = self.TrainData[s,self.Top[0]:]  
 
-				self.ForwardPass_Simple(Input)  
-				self.BackwardPass(Input , Desired)
+				self.ForwardPass(Input)  
+				self.BackwardPass(Input ,Desired)
 				sse = sse+ self.sampleEr(Desired)
 			 
 			mse = np.sqrt(sse/self.NumSamples*self.Top[2])
@@ -208,7 +169,7 @@ def normalisedata(data, inputsize, outsize): # normalise the data between [0,1]
 def main(): 
 					
 		
-	problem = 3 # [1,2,3] choose your problem (Iris classfication or 4-bit parity or XOR gate)
+	problem = 1 # [1,2,3] choose your problem (Iris classfication or 4-bit parity or XOR gate)
 				
 
 	if problem == 1:
@@ -238,7 +199,7 @@ def main():
 		TestSize = 16
 		learnRate = 0.9 
 		mRate = 0.01
-		MaxTime = 3000
+		MaxTime = 10000
 
 	elif problem == 3:
 		TrainData = np.loadtxt("data/xor.csv", delimiter=',') #  XOR  problem
@@ -264,12 +225,7 @@ def main():
 
 	trainTolerance = 0.2 # [eg 0.15 would be seen as 0] [ 0.81 would be seen as 1]
 	testTolerance = 0.4
-
-	useStocasticGD = 1 # 0 for vanilla BP. 1 for Stocastic BP
-	useVanilla = 1 # 1 for Vanilla Gradient Descent, 0 for Gradient Descent with momentum (either regular momentum or nesterov momen) 
-	useNestmomen = 0 # 0 for regular momentum, 1 for Nesterov momentum
-	 
-
+ 
 
 	trainPerf = np.zeros(MaxRun)
 	testPerf =  np.zeros(MaxRun)
@@ -282,9 +238,9 @@ def main():
 	for run in range(0, MaxRun  ):
 		print(run, ' is experimental run') 
 
-		fnn = Network(Topo, TrainData, TestData, MaxTime, TrSamples, MinCriteria)
+		fnn = Network(Topo, TrainData, TestData, MaxTime, TrSamples, MinCriteria, learnRate)
 		start_time=time.time()
-		(erEp,  trainMSE[run] , trainPerf[run] , Epochs[run]) = fnn.BP_GD(learnRate)   
+		(erEp,  trainMSE[run] , trainPerf[run] , Epochs[run]) = fnn.BP_GD()   
 
 		Time[run]  =time.time()-start_time
 		(testMSE[run], testPerf[run]) = fnn.TestNetwork(TestData, TestSize, testTolerance)
