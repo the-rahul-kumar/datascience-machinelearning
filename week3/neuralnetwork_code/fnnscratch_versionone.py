@@ -56,49 +56,34 @@ class Network:
 	def sigmoid(self,x):
 		return 1 / (1 + np.exp(-x))
 
-	
-	def softmax(self, x):
-		# Numerically stable with large exponentials
-		exps = np.exp(x - x.max())
-		return exps / np.sum(exps, axis=0)
-
+	 
 	def sampleEr(self,actualout):
 		error = np.subtract(self.out, actualout)
 		sqerror= np.sum(np.square(error))/self.Top[2] 
 		 
 		return sqerror
-
-	'''def ForwardPass(self, X ): 
-		z1 = X.dot(self.W1) - self.B1  
-		self.hidout = self.sigmoid(z1) # output of first hidden layer   
-		z2 = self.hidout.dot(self.W2)  - self.B2 
-		self.out = self.sigmoid(z2)  # output second hidden layer'''
+ 
 
 
 	def ForwardPass_Simple(self, input_vec ):  # Alternative implementation of ForwardPass(self, X )
 		layer = 0 # input to hidden layer
-		weightsum_first = np.zeros(self.Top[layer+1]) 
-
-		print(input_vec, ' input_vec')
+		weightsum_first = 0
 
 		for y in range(0, self.Top[layer+1]):
-			for x in range(0, self.Top[layer]):
-
-				weightsum_first[y]  +=   input_vec[x]# * self.W1[x,y] 
-			weightsum_first[y] = 0
-
-		self.hidout = self.sigmoid(weightsum_first - self.B1)
-
-		print(self.hidout , ' self.hidout ')
+			for x in range(0, self.Top[layer]): 
+				weightsum_first   +=   input_vec[x] * self.W1[x,y] 
+			self.hidout[y] = self.sigmoid(weightsum_first - self.B1[y])
+			weightsum_first  = 0 
 
 		layer = 1 #   hidden layer to output
-		weightsum_second = np.zeros(self.Top[layer+1]) # output of second layer (class outputs)
+		weightsum_second = 0 # output of second layer (class outputs)
 		for y in range(0, self.Top[layer+1]):
 			for x in range(0, self.Top[layer]):
-				weightsum_second[y]  +=   self.hidout[x] * self.W2[x,y]
-			weightsum_second[y] = 0
+				weightsum_second  +=   self.hidout[x] * self.W2[x,y]
+			self.out[y] = self.sigmoid(weightsum_second - self.B2[y])
+			weightsum_second = 0
 
-		self.out = self.sigmoid(weightsum_second - self.B2)
+		
 
 
  
@@ -116,18 +101,18 @@ class Network:
 		for x in range(0, self.Top[layer]):
 			for y in range(0, self.Top[layer+1]):
 				temp += ( self.out_delta[y] * self.W2[x,y]);
-				self.hid_delta[x] =  (self.hidout[x] * (1 - self.hidout[x])) * temp
-				temp = 0
+			self.hid_delta[x] =  (self.hidout[x] * (1 - self.hidout[x])) * temp
+			temp = 0
 
 				# update weights and bias
 		layer = 1 # hidden to output
 
 		for x in range(0, self.Top[layer]):
 			for y in range(0, self.Top[layer+1]):
-					self.W2[x,y] += self.learn_rate * self.out_delta[y] * self.hidout[x]
+				self.W2[x,y] += self.learn_rate * self.out_delta[y] * self.hidout[x]
 			#print self.W2
-			for y in range(0, self.Top[layer+1]):
-				self.B2[y] += -1 * self.learn_rate * self.out_delta[y]
+		for y in range(0, self.Top[layer+1]):
+			self.B2[y] += -1 * self.learn_rate * self.out_delta[y]
 
 		layer = 0 # Input to Hidden
 
@@ -137,6 +122,8 @@ class Network:
 
 		for y in range(0, self.Top[layer+1]):
 			self.B1[y] += -1 * self.learn_rate * self.hid_delta[y]
+ 
+
 
 			
  
@@ -153,8 +140,8 @@ class Network:
  
 		for s in range(0, testSize):
 							
-			Input[:]  =   Data[s,0:self.Top[0]] 
-			Desired[:] =  Data[s,self.Top[0]:] 
+			Input  =   Data[s,0:self.Top[0]] 
+			Desired =  Data[s,self.Top[0]:] 
 
 			self.ForwardPass_Simple(Input ) 
 			sse = sse+ self.sampleEr(Desired)  
@@ -189,7 +176,8 @@ class Network:
 
 				self.ForwardPass_Simple(Input)  
 
-				#self.BackwardPass_Simple(Input ,Desired)
+				self.BackwardPass_Simple(Input ,Desired)
+
 				sse = sse+ self.sampleEr(Desired)
 			 
 			mse = np.sqrt(sse/self.NumSamples*self.Top[2])
@@ -216,7 +204,7 @@ def normalisedata(data, inputsize, outsize): # normalise the data between [0,1]
 def main(): 
 					
 		
-	problem = 1 # [1,2,3] choose your problem (Iris classfication or 4-bit parity or XOR gate)
+	problem = 2 # [1,2,3] choose your problem (Iris classfication or 4-bit parity or XOR gate)
 				
 
 	if problem == 1:
@@ -225,13 +213,12 @@ def main():
 		Hidden = 6
 		Input = 4
 		Output = 2 #https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
-		TrSamples =  110
-		TestSize = 40
-		learnRate = 0.1 
-		mRate = 0.01   
+		TrSamples =  TrDat.shape[0]
+		TestSize = TesDat.shape[0]
+		learnRate = 0.1  
 		TrainData  = normalisedata(TrDat, Input, Output) 
 		TestData  = normalisedata(TesDat, Input, Output)
-		MaxTime = 500
+		MaxTime = 1000
 
 
 		 
@@ -239,14 +226,13 @@ def main():
 	elif problem == 2:
 		TrainData = np.loadtxt("data/4bit.csv", delimiter=',') #  4-bit parity problem
 		TestData = np.loadtxt("data/4bit.csv", delimiter=',') #  
-		Hidden = 4
+		Hidden = 6
 		Input = 4
 		Output = 1 #  https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
-		TrSamples =  16
-		TestSize = 16
-		learnRate = 0.9 
-		mRate = 0.01
-		MaxTime = 10000
+		TrSamples =  TrainData.shape[0]
+		TestSize = TestData.shape[0]
+		learnRate = 0.9
+		MaxTime = 5000
 
 	elif problem == 3:
 		TrainData = np.loadtxt("data/xor.csv", delimiter=',') #  XOR  problem
@@ -254,16 +240,11 @@ def main():
 		Hidden = 3
 		Input = 2
 		Output = 2  # one hot encoding: https://machinelearningmastery.com/how-to-one-hot-encode-sequence-data-in-python/
-		TrSamples =  4
-		TestSize = 4
-		learnRate = 0.9 
-		mRate = 0.01
+		TrSamples =  TrainData.shape[0]
+		TestSize = TestData.shape[0]
+		learnRate = 0.5
 		MaxTime = 500 
-
-	#print(TrainData)
-
-	# todo: softmax: https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
-
+ 
 
 	Topo = [Input, Hidden, Output] 
 	MaxRun = 3 # number of experimental runs 

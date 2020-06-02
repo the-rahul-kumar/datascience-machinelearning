@@ -169,7 +169,7 @@ def normalisedata(data, inputsize, outsize): # normalise the data between [0,1]
 def main(): 
 					
 		
-	problem = 1 # [1,2,3] choose your problem (Iris classfication or 4-bit parity or XOR gate)
+	problem = 2 # [1,2,3] choose your problem (Iris classfication or 4-bit parity or XOR gate)
 				
 
 	if problem == 1:
@@ -178,13 +178,12 @@ def main():
 		Hidden = 6
 		Input = 4
 		Output = 2 #https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
-		TrSamples =  110
-		TestSize = 40
-		learnRate = 0.1 
-		mRate = 0.01   
+		TrSamples =  TrDat.shape[0]
+		TestSize = TesDat.shape[0]
+		learnRate = 0.1  
 		TrainData  = normalisedata(TrDat, Input, Output) 
 		TestData  = normalisedata(TesDat, Input, Output)
-		MaxTime = 500
+		MaxTime = 1000
 
 
 		 
@@ -192,14 +191,13 @@ def main():
 	elif problem == 2:
 		TrainData = np.loadtxt("data/4bit.csv", delimiter=',') #  4-bit parity problem
 		TestData = np.loadtxt("data/4bit.csv", delimiter=',') #  
-		Hidden = 4
+		Hidden = 6
 		Input = 4
 		Output = 1 #  https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
-		TrSamples =  16
-		TestSize = 16
+		TrSamples =  TrainData.shape[0]
+		TestSize = TestData.shape[0]
 		learnRate = 0.9 
-		mRate = 0.01
-		MaxTime = 10000
+		MaxTime = 5000
 
 	elif problem == 3:
 		TrainData = np.loadtxt("data/xor.csv", delimiter=',') #  XOR  problem
@@ -207,15 +205,11 @@ def main():
 		Hidden = 3
 		Input = 2
 		Output = 2  # one hot encoding: https://machinelearningmastery.com/how-to-one-hot-encode-sequence-data-in-python/
-		TrSamples =  4
-		TestSize = 4
-		learnRate = 0.9 
-		mRate = 0.01
-		MaxTime = 500 
-
-	#print(TrainData)
-
-	# todo: softmax: https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
+		TrSamples =  TrainData.shape[0]
+		TestSize = TestData.shape[0]
+		learnRate = 0.5
+		MaxTime = 500
+ 
 
 
 	Topo = [Input, Hidden, Output] 
@@ -224,7 +218,7 @@ def main():
 	MinCriteria = 95 #stop when learn 95 percent
 
 	trainTolerance = 0.2 # [eg 0.15 would be seen as 0] [ 0.81 would be seen as 1]
-	testTolerance = 0.4
+	testTolerance = 0.49
  
 
 	trainPerf = np.zeros(MaxRun)
