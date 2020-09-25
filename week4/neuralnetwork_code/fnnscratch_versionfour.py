@@ -1,20 +1,12 @@
-# Rohitash Chandra, 2017 c.rohitash@gmail.conm
-
-#https://github.com/rohitash-chandra
+#Sources: https://github.com/rohitash-chandra
+#http://iamtrask.github.io/2015/07/12/basic-python-network/  
  
-
-# ref: http://iamtrask.github.io/2015/07/12/basic-python-network/  
- 
-
 #Sigmoid units used in hidden and output  
-
-# Numpy used: http://cs231n.github.io/python-numpy-tutorial/#numpy-arrays
+#Numpy: http://cs231n.github.io/python-numpy-tutorial/#numpy-arrays
  
-# this version will demonstrate momemntum and stocastic gradient descent 
-
+#This version will demonstrate momemntum and stocastic gradient descent.
 #FNN for Time Series prediction and Regression
  
-
 import matplotlib.pyplot as plt
 import numpy as np 
 import random
@@ -24,7 +16,7 @@ class Network:
 
 	def __init__(self, Topo, Train, Test, MaxTime,  MinPer, learnRate, use_stocasticGD, use_vanillalearning,  momentum_rate): 
 		self.Top  = Topo  # NN topology [input, hidden, output]
-		self.Max = MaxTime # max epocs
+		self.Max = MaxTime # Max epocs
 		self.TrainData = Train
 		self.TestData = Test
 		self.NumSamples = Train.shape[0]
@@ -34,12 +26,12 @@ class Network:
 
 		self.minPerf = MinPer
 		
-		#initialize weights ( W1 W2 ) and bias ( b1 b2 ) of the network
+		#Initialise weights ( W1 W2 ) and bias ( b1 b2 ) of the network
 		np.random.seed() 
 		self.W1 = np.random.uniform(-0.5, 0.5, (self.Top[0] , self.Top[1]))  
-		#print(self.W1,  ' self.W1')
+		#Print(self.W1,  ' self.W1')
 		self.B1 = np.random.uniform(-0.5,0.5, (1, self.Top[1])  ) # bias first layer
-		#print(self.B1, ' self.B1')
+		#Print(self.B1, ' self.B1')
 		self.BestB1 = self.B1
 		self.BestW1 = self.W1 
 		self.W2 = np.random.uniform(-0.5, 0.5, (self.Top[1] , self.Top[2]))   
@@ -89,14 +81,14 @@ class Network:
 		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1-self.hidout)) 
 		#https://www.tutorialspoint.com/numpy/numpy_dot.htm  https://www.geeksforgeeks.org/numpy-dot-python/
   
-		if self.vanilla == True: #no momentum 
+		if self.vanilla == True: #No momentum 
 			self.W2+= self.hidout.T.dot(out_delta) * self.learn_rate
 			self.B2+=  (-1 * self.learn_rate * out_delta)
 
 			self.W1 += (input_vec.T.dot(hid_delta) * self.learn_rate) 
 			self.B1+=  (-1 * self.learn_rate * hid_delta) 
-		else: # use momentum
-			v2 = self.W2.copy() #save previous weights http://cs231n.github.io/neural-networks-3/#sgd
+		else: # Use momentum
+			v2 = self.W2.copy() #Save previous weights http://cs231n.github.io/neural-networks-3/#sgd
 			v1 = self.W1.copy()
 			b2 = self.B2.copy()
 			b1 = self.B1.copy()
@@ -109,19 +101,19 @@ class Network:
 			
  
 	def TestNetworkRegression(self, Data,  erTolerance):
-		Input = np.zeros((1, self.Top[0])) # temp hold input
+		Input = np.zeros((1, self.Top[0])) # Temp hold input
 		Desired = np.zeros((1, self.Top[2])) 
 		nOutput = np.zeros((1, self.Top[2]))
 		testSize = Data.shape[0] 
 		sse = 0  
-		Input = np.zeros((1, self.Top[0])) # temp hold input
+		Input = np.zeros((1, self.Top[0])) # Temp hold input
 
 		predicted = np.zeros(testSize)
 
 		self.W1 = self.BestW1
-		self.W2 = self.BestW2 #load best knowledge
+		self.W2 = self.BestW2 #Load best knowledge
 		self.B1 = self.BestB1
-		self.B2 = self.BestB2 #load best knowledge
+		self.B2 = self.BestB2 #Load best knowledge
  
 		for s in range(0, testSize):
 							
@@ -148,47 +140,36 @@ class Network:
 		self.BestB1 = self.B1
 		self.BestB2 = self.B2 
 
-		#print (self.BestW1, self.BestW2, self.BestB1, self.BestB2)
+		#Print (self.BestW1, self.BestW2, self.BestB1, self.BestB2)
+
+	 
 
 	def BP_GD(self, trainTolerance):  
-
-
-		Input = np.zeros((1, self.Top[0])) # temp hold input
+		Input = np.zeros((1, self.Top[0])) # Temp hold input
 		Desired = np.zeros((1, self.Top[2])) 
 
-		minibatchsize = int(0.1* self.TrainData.shape[0]) # choose a mini-batch size for SGD
+		#minibatchsize = int(0.1* self.TrainData.shape[0]) # Choose a mini-batch size for SGD - optional exercise to implement this
 
-		er = [] # collect error over time
+		Er = [] 
 		epoch = 0
-		bestRMSE= 10000 # assign a large number in begining to maintain best (lowest RMSE)
+		bestRMSE= 10000 # Assign a large number in begining to maintain best (lowest RMSE)
 		bestTrain = 0
 		while  epoch < self.Max and bestTrain < self.minPerf :
 			sse = 0
 
-			if(self.stocasticGD==True): # create a minibatch of samples 
-				train_dat = np.array(self.TrainData).tolist()
-				array = []
-				for iteratable in range (0, minibatchsize):
-					pat = random.randint(0, len(self.TrainData)-1) # construst a mini-batch for SGD
-					array.append(train_dat[pat])		   	
-				train_dat = np.asarray(array)
-				num_batch = 10 # because your batch size is 10 %, you need 10 batches to cover full data approximately
-			else:
-				train_dat = self.TrainData
-				num_batch = 1
+			for s in range(0, self.TrainData.shape[0]):
+				if(self.stocasticGD==True):   
+					pat = random.randint(0, self.TrainData.shape[0]-1) 
+					# Data shuffle in SGD: https://docs.scipy.org/doc/numpy-1.15.1/reference/generated/numpy.random.randint.html
+				else:
+					pat = s # no data shuffle in SGD
+		
+				Input[:]  =  self.TrainData[pat,0:self.Top[0]]  
+				Desired[:]  = self.TrainData[pat,self.Top[0]:]  
 
-			#print(train_dat)
-
-			for batch in range(0, num_batch): # 10 mini batches in case of SGD. 1 major batch in case of GD
-
-				for s in range(0, train_dat.shape[0]):
-			
-					Input[:]  =  train_dat[s,0:self.Top[0]]  
-					Desired[:]  = train_dat[s,self.Top[0]:]  
-
-					self.ForwardPass(Input)  
-					self.BackwardPass(Input ,Desired)
-					sse = sse+ self.sampleEr(Desired)
+				self.ForwardPass(Input)  
+				self.BackwardPass(Input ,Desired)
+				sse = sse+ self.sampleEr(Desired)
 			 
 			rmse = np.sqrt(sse/self.TrainData.shape[0]*self.Top[2])
 
@@ -196,17 +177,14 @@ class Network:
 				 bestRMSE = rmse
 				 self.saveKnowledge() 
 				 bestRMSE, actual, predicted = self.TestNetworkRegression(self.TrainData,   trainTolerance)
-				 #print(bestRMSE )
 
-			er = np.append(er, rmse)
+			Er = np.append(Er, rmse)
 			
 			epoch=epoch+1  
 
-		return (er, bestRMSE,  epoch, actual, predicted) 
+		return (Er,bestRMSE, bestTrain, epoch,  predicted) 
 
-
-
-def normalisedata(data, inputsize, outsize): # normalise the data between [0,1]
+def normalisedata(data, inputsize, outsize): # Normalise the data between [0,1]
 	traindt = data[:,np.array(range(0,inputsize))]	
 	dt = np.amax(traindt, axis=0)
 	tds = abs(traindt/dt) 
@@ -248,11 +226,11 @@ def main():
 	
 
 
-	MinCriteria = 100 #stop when learn 100 percent - to ensure it does not stop ( does not apply for time series - regression problems)
+	MinCriteria = 100 #Stop when learn 100 percent - to ensure it does not stop ( does not apply for time series - regression problems)
 
 
 	Topo = [Input, Hidden, Output] 
-	MaxRun = 5 # number of experimental runs 
+	MaxRun = 5 # Number of experimental runs 
 	 
 
 	trainTolerance = 0.2 # [eg 0.15 would be seen as 0] [ 0.81 would be seen as 1]
@@ -260,9 +238,11 @@ def main():
 
 	learnRate = 0.1  
 
-	useStocastic = False # False for vanilla BP. True for Stocastic BP
-	updateStyle = True # True for Vanilla (Canonical) Gradient Descent, False for Gradient Descent with momentum  
 
+ 
+	useStocastic = True # False for vanilla BP with SGD (no shuffle of data).
+	#                     True for  BP with SGD (shuffle of data at every epoch)
+	updateStyle = True # True for Vanilla SGD, False for   momentum  SGD
 	momentum_rate = 0.001 # 0.1 ends up having very large weights. you can try and see
 	 
  
@@ -279,7 +259,6 @@ def main():
 		fnn = Network(Topo, TrainData, TestData, MaxTime,   MinCriteria, learnRate, useStocastic, updateStyle, momentum_rate)
 		start_time=time.time()
 		(erEp,  trainRMSE[run],  Epochs[run], actual, predicted) = fnn.BP_GD(trainTolerance)   
-
 
 		Time[run]  =time.time()-start_time
 		(testRMSE[run], actual, predicted) = fnn.TestNetworkRegression(TestData,  testTolerance) 
@@ -321,4 +300,5 @@ def main():
 			 
  
 if __name__ == "__main__": main()
+
 
