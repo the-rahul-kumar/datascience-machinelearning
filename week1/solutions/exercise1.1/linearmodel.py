@@ -23,7 +23,7 @@ def get_data():
 
     data_in = datasets.load_iris() 
  
-    data_input = data_in.data[:, 1] # 1 feature  
+    data_input = data_in.data[:, [1]] # 1 feature (2nd feature) 
 
     #data_input = data_in.data[:, [1, 2]] # 2 features 
 
@@ -90,6 +90,7 @@ def scipy_linear_mod(x_train, x_test, y_train, y_test):
     # The mean squared error
     print("Mean squared error: %.2f" % mean_squared_error(y_test, y_pred))
     # Explained variance score: 1 is perfect prediction
+    #mse = mean_squared_error()
     print('Variance score: %.2f' % r2_score(y_test, y_pred))
 
     print(y_pred, ' y_pred')
@@ -119,6 +120,8 @@ def scipy_linear_mod(x_train, x_test, y_train, y_test):
 
     plt.savefig('resultlinear_reg.png')'''
 
+    return acc 
+
 
 
 
@@ -132,7 +135,7 @@ def main():
     print(y_train, ' y_train') 
 
 
-    scipy_linear_mod(x_train, x_test, y_train, y_test)
+    acc = scipy_linear_mod(x_train, x_test, y_train, y_test)
  
 
 
