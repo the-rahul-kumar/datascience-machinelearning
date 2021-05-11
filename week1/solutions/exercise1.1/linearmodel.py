@@ -96,7 +96,10 @@ def scipy_linear_mod(x_train, x_test, y_train, y_test):
 
     #y_pred_int = y_pred.astype(int) # n case you want to just convert to int
 
-    y_pred_int = np.rint(y_pred) # round off and convert to int
+    #y_pred_int = np.rint(y_pred) # round off and convert to int
+
+    #https://numpy.org/doc/stable/reference/generated/numpy.heaviside.html
+    y_pred_int = np.heaviside(y_pred, 1)
 
     print(y_pred_int, ' y_pred int ')
 
