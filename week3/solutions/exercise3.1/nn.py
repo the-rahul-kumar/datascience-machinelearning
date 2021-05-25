@@ -40,16 +40,34 @@ def read_data(run_num):
 
  
     
-def scipy_nn(x_train, x_test, y_train, y_test, type_model, hidden, run_num):
+def scipy_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, run_num):
     #Source: https://scikit-learn.org/stable/modules/neural_networks_supervised.html
+
+    #random_stateint, RandomState instance, default=None Determines random number generation
+    # for weights and bias initialization, train-test split if early stopping is used, and batch sampling when solver=’sgd’
+    #or ‘adam’. Pass an int for reproducible results across multiple function calls.
+
+    #learning_rate_initdouble, default=0.001
+    #The initial learning rate used. It controls the step-size in updating the weights. Only used when solver=’sgd’ or ‘adam’.
+
+    #note Adam does not need momentum and constant learning rate since they are adjusted in Adam itself
+
+
+
+
+
+
+
+
     if type_model ==0: #SGD
-        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100, warm_start=True,solver='sgd',learning_rate='constant', learning_rate_init=0.01, momentum=0.9)
+        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=0, max_iter=100,solver='sgd',  learning_rate_init=learn_rate )
         #https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
     elif type_model ==1: #Adam
-        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100, warm_start=True,solver='adam',learning_rate='constant', learning_rate_init=0.01)
+        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100,solver='adam', learning_rate_init=0.01)
         #https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
     elif type_model ==2: #SGD with 2 hidden layers
-        nn = MLPClassifier(hidden_layer_sizes=(hidden,hidden), random_state=run_num, max_iter=100, warm_start=True,solver='sgd',learning_rate='constant', learning_rate_init=0.01, momentum=0.9)
+        nn = MLPClassifier(hidden_layer_sizes=(hidden,hidden), random_state=run_num, max_iter=100,solver='sgd',learning_rate='constant', learning_rate_init=learn_rate, momentum=0.9)
+        #hidden_layer_sizes=(hidden,hidden, hidden) would implement 3 hidden layers
     else:
         print('no model')    
  
@@ -57,17 +75,20 @@ def scipy_nn(x_train, x_test, y_train, y_test, type_model, hidden, run_num):
     nn.fit(x_train, y_train)
 
     # Make predictions using the testing set
-    y_pred = nn.predict(x_test)
+    y_pred_test = nn.predict(x_test)
+    y_pred_train = nn.predict(x_train)
 
     #print([coef.shape for coef in nn.coefs_], 'weights shape')
  
     #print("RMSE: %.2f" % np.sqrt(mean_squared_error(y_test, y_pred)))  
-    acc = accuracy_score(y_pred, y_test) 
-    cm = confusion_matrix(y_pred, y_test) 
+    acc_test = accuracy_score(y_pred_test, y_test) 
+    acc_train = accuracy_score(y_pred_train, y_train) 
+
+    cm = confusion_matrix(y_pred_test, y_test) 
     #print(cm, 'is confusion matrix')
 
     #auc = roc_auc_score(y_pred, y_test, average=None) 
-    return acc
+    return acc_test #,acc_train
 
 
 def main(): 
@@ -80,6 +101,8 @@ def main():
     SGD2_all = np.zeros(max_expruns)  
     max_hidden = 12
 
+    learn_rate = 0.4
+
 
     for hidden in range(6,max_hidden, 2):
  
@@ -87,9 +110,9 @@ def main():
     
             x_train, x_test, y_train, y_test = read_data(0)   
             
-            acc_sgd = scipy_nn(x_train, x_test, y_train, y_test, 0, hidden, run_num) #SGD
-            acc_adam = scipy_nn(x_train, x_test, y_train, y_test, 1, hidden, run_num) #Adam 
-            acc_sgd2 = scipy_nn(x_train, x_test, y_train, y_test, 2, hidden, run_num) #SGD
+            acc_sgd = scipy_nn(x_train, x_test, y_train, y_test, 0, hidden, learn_rate, run_num) #SGD
+            acc_adam = scipy_nn(x_train, x_test, y_train, y_test, 1, hidden, learn_rate, run_num) #Adam 
+            acc_sgd2 = scipy_nn(x_train, x_test, y_train, y_test, 2, hidden, learn_rate,  run_num) #SGD
            
             SGD_all[run_num] = acc_sgd
             Adam_all[run_num] = acc_adam
@@ -101,6 +124,8 @@ def main():
         print(np.std(SGD_all), hidden, ' std SGD_all')
 
         print(Adam_all, hidden,' Adam_all')
+        print(np.mean(Adam_all), hidden, ' Adam _all')
+        print(np.std(Adam_all), hidden, ' Adam _all')
 
         print(SGD2_all, hidden,' SGD2_all')
 
