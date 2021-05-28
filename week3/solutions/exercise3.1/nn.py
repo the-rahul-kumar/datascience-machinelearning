@@ -60,13 +60,13 @@ def scipy_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, r
 
 
     if type_model ==0: #SGD
-        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=0, max_iter=100,solver='sgd',  learning_rate_init=learn_rate )
+        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100,solver='sgd',  learning_rate_init=learn_rate )
         #https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
     elif type_model ==1: #Adam
-        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100,solver='adam', learning_rate_init=0.01)
+        nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100,solver='adam', learning_rate_init=learn_rate)
         #https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
     elif type_model ==2: #SGD with 2 hidden layers
-        nn = MLPClassifier(hidden_layer_sizes=(hidden,hidden), random_state=run_num, max_iter=100,solver='sgd',learning_rate='constant', learning_rate_init=learn_rate, momentum=0.9)
+        nn = MLPClassifier(hidden_layer_sizes=(hidden,hidden), random_state=run_num, max_iter=100,solver='sgd',learning_rate='constant', learning_rate_init=learn_rate)
         #hidden_layer_sizes=(hidden,hidden, hidden) would implement 3 hidden layers
     else:
         print('no model')    
@@ -93,7 +93,7 @@ def scipy_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, r
 
 def main(): 
 
-    max_expruns = 3
+    max_expruns = 5
 
     SGD_all = np.zeros(max_expruns) 
     Adam_all = np.zeros(max_expruns) 
@@ -101,9 +101,12 @@ def main():
     SGD2_all = np.zeros(max_expruns)  
     max_hidden = 12
 
-    learn_rate = 0.4
+    learn_rate = 0.01
+    #hidden = 8
 
 
+    #for learn_rate in range(0.1,1, 0.2):
+    
     for hidden in range(6,max_hidden, 2):
  
         for run_num in range(0,max_expruns): 
@@ -112,7 +115,7 @@ def main():
             
             acc_sgd = scipy_nn(x_train, x_test, y_train, y_test, 0, hidden, learn_rate, run_num) #SGD
             acc_adam = scipy_nn(x_train, x_test, y_train, y_test, 1, hidden, learn_rate, run_num) #Adam 
-            acc_sgd2 = scipy_nn(x_train, x_test, y_train, y_test, 2, hidden, learn_rate,  run_num) #SGD
+            acc_sgd2 = scipy_nn(x_train, x_test, y_train, y_test, 2, hidden, learn_rate,  run_num) #SGD2
            
             SGD_all[run_num] = acc_sgd
             Adam_all[run_num] = acc_adam
