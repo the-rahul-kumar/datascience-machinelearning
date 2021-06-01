@@ -23,10 +23,11 @@ from keras.models import Sequential
  
 from keras.layers import Dropout
 
+from keras.regularizers import l2
+
 import random
 
-
-from sklearn.metrics import roc_curve, auc
+ 
 
 def read_data(run_num):
     #Source:  Pima-Indian diabetes dataset: https://www.kaggle.com/kumargh/pimaindiansdiabetescsv
@@ -93,6 +94,7 @@ def keras_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, r
     plt.plot(history.history['val_accuracy'], label='test')
     plt.legend()
     plt.savefig(str(type_model)+'nodp.png') 
+    plt.clf()
    
     #auc = roc_auc_score(y_pred, y_test, average=None) 
     return acc_test #,acc_train
