@@ -1,0 +1,14 @@
+python nntimeseries.py 
+Using TensorFlow backend.
+2021-06-01 16:38:55.549776: I tensorflow/core/platform/cpu_feature_guard.cc:143] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2021-06-01 16:38:55.574949: I tensorflow/core/platform/profile_utils/cpu_utils.cc:102] CPU Frequency: 2199995000 Hz
+2021-06-01 16:38:55.575404: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55a9140a0dd0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2021-06-01 16:38:55.575423: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2021-06-01 16:38:55.575539: I tensorflow/core/common_runtime/process_util.cc:147] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+[0.04409158 0.08176214] 6  RMSE all runs
+0.06292686267203415 6  mean 
+0.01883527894322534 6  std
+[0.08069723 0.04474617] 8  RMSE all runs
+0.06272169781244549 8  mean 
+0.017975529802347644 8  std
+

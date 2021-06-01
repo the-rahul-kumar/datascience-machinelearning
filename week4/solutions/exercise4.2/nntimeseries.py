@@ -32,7 +32,7 @@ from sklearn.metrics import roc_curve, auc
 
 def read_data(run_num):
     #Source - raw and processed data :  https://github.com/sydney-machine-learning/Bayesianneuralnet_stockmarket/tree/master/code/dataset
-    # five inputs (window size of 5) for 5 steps ahead (MMM dataset)
+    # five inputs (window size of 5) for 5 steps ahead (MMM dataset) https://finance.yahoo.com/quote/MMM/
     #code to process raw data: https://github.com/sydney-machine-learning/Bayesianneuralnet_stockmarket/blob/master/code/data.py
     data_in = genfromtxt("https://raw.githubusercontent.com/sydney-machine-learning/Bayesianneuralnet_stockmarket/master/code/dataset/MMM8_train.txt", delimiter=" ")
     data_inputx = data_in[:,0:5] # all features 0, 1, 2, 3, 4, 5, 6, 7 
