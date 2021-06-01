@@ -54,7 +54,7 @@ def keras_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, r
         model = Sequential()
         model.add(Dense(hidden, input_dim=x_train.shape[1], activation='relu'))
         model.add(Dense(1, activation='sigmoid'))
-        model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        model.compile(loss='binary_crossentropy', optimizer='sgd',  metrics=['accuracy'])
     
     elif type_model ==1: #Adam
         #nn = MLPClassifier(hidden_layer_sizes=(hidden,), random_state=run_num, max_iter=100,solver='adam', learning_rate_init=learn_rate)
@@ -69,7 +69,7 @@ def keras_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, r
         #hidden_layer_sizes=(hidden,hidden, hidden) would implement 3 hidden layers
         model = Sequential()
         model.add(Dense(hidden, input_dim=x_train.shape[1], activation='sigmoid')) 
-        model.add(Dense(hidden, input_dim=x_train.shape[1], activation='sigmoid'))
+        model.add(Dense(hidden, activation='sigmoid'))
         model.add(Dense(1, activation='sigmoid'))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     
@@ -79,7 +79,7 @@ def keras_nn(x_train, x_test, y_train, y_test, type_model, hidden, learn_rate, r
 
     
     # Fit model
-    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=500, verbose=0)
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=500, batch_size=10, verbose=0)
 
     # Evaluate the model
     #https://keras.io/api/models/model_training_apis/
@@ -105,15 +105,14 @@ def main():
     Adam_all = np.zeros(max_expruns) 
     
     SGD2_all = np.zeros(max_expruns)  
-    max_hidden = 8
+    max_hidden = 8 # 
 
-    learn_rate = 0.01
-    #hidden = 8
+    learn_rate = 0.01 
 
 
     #for learn_rate in range(0.1,1, 0.2):
     
-    for hidden in range(6,max_hidden, 2):
+    for hidden in range(6,max_hidden, 2): # only cover 6 hidden neurons for now
  
         for run_num in range(0,max_expruns): 
     
